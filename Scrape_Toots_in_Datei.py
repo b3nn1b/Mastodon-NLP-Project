@@ -1,8 +1,7 @@
 from bs4 import BeautifulSoup
 import re
+import json
 import mastodon
-from bertopic import BERTopic
-from sklearn.datasets import fetch_20newsgroups
 from credentials import MASTODON_INSTANCE
 from credentials import ACCESS_TOKEN
 from credentials import HASHTAG
@@ -19,6 +18,16 @@ def remove_html(html_content):
         if text:
             text_content.append(text)
     return ' '.join(text_content)
+
+# Toot Content als JSON speichern
+def save_list_to_json(data_list, filename):
+    with open(filename, 'w', encoding='utf-8') as f:
+        json.dump(data_list, f, ensure_ascii=False)
+
+def save_list_to_file(data_list, filename):
+    with open(filename, 'w', encoding='utf-8') as f:
+        for item in data_list:
+            f.write(item + '\n')
 
 # Initialisieren
 masto = mastodon.Mastodon(
@@ -81,36 +90,15 @@ try:
             'author': toot['account']['acct'],
             'url': toot['url']
         })
+
+    content_list = []
+    for item in data:
+        content_list.append(item['content'])
+    save_list_to_file(content_list, 'content.txt')
+
 except Exception as e:
     print(f"Fehler beim Verarbeiten: {e}")
     exit()
 
-content_list = []
-for item in data:
-    content_list.append(item['content'])
 
-#print(all_content_as_string)
 
-print("Beginn BERTopic")
-topic_model = BERTopic(language="german", nr_topics="auto")
-topics, probs = topic_model.fit_transform(content_list)
-print(topic_model.get_topic(0))
-print(topic_model.get_topic(1))
-print(topic_model.get_topic(2))
-print(topic_model.get_topic(3))
-
-# Daten Speichern
-#try:
-#    with open("Toots.txt", 'w', encoding='utf-8') as f:
-#        for i, toot in enumerate(data, 1):
-#            f.write(f"Toot #{i}\n")
-#            f.write(f"Author: {toot['author']}\n")
-#            f.write(f"Date: {toot['created_at']}\n")
-#            f.write(f"Content: {toot['content']}\n")
-#            f.write(f"URL: {toot['url']}\n")
-#            f.write("-" * 50 + "\n\n")
-#except Exception as e:
-#    print(f"Fehler beim Speichern: {e}")
-#    exit()
-
-#print("Daten erfolgreich extrahiert und gespeichert.")

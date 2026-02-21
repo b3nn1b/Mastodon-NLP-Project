@@ -7,8 +7,20 @@ from credentials import MASTODON_INSTANCE
 from credentials import ACCESS_TOKEN
 from credentials import HASHTAG
 
-# HTML und URLs entfernen
+# Nur HTML entfernen
 def remove_html(html_content):
+    soup = BeautifulSoup(html_content, 'html.parser')
+
+    text_content = []
+    for p in soup.find_all('p'):
+        text = p.get_text()
+        text = re.sub(r'\s+', ' ', text).strip()
+        if text:
+            text_content.append(text)
+
+    return ' '.join(text_content)
+
+def remove_html_urls(html_content):
     soup = BeautifulSoup(html_content, 'html.parser')
     url_pattern = re.compile(r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+')
     text_content = []
@@ -72,45 +84,61 @@ except Exception as e:
 
 # Daten verarbeiten
 try:
-    data = []
+    data_roh = []
     for toot in all_toots:
-        data.append({
+        data_roh.append({
+            'id': toot['id'],
+            'content': toot['content'],
+        })
+
+    data_1 = []
+    for toot in all_toots:
+        data_1.append({
             'id': toot['id'],
             'content': remove_html(toot['content']),
-            'created_at': toot['created_at'],
-            'author': toot['account']['acct'],
-            'url': toot['url']
         })
+
+    data_2 = []
+    for toot in all_toots:
+        data_2.append({
+            'id': toot['id'],
+            'content': remove_html_urls(toot['content']),
+        })
+
 except Exception as e:
     print(f"Fehler beim Verarbeiten: {e}")
     exit()
 
-content_list = []
-for item in data:
-    content_list.append(item['content'])
-
-#print(all_content_as_string)
-
-print("Beginn BERTopic")
-topic_model = BERTopic(language="german", nr_topics="auto")
-topics, probs = topic_model.fit_transform(content_list)
-print(topic_model.get_topic(0))
-print(topic_model.get_topic(1))
-print(topic_model.get_topic(2))
-print(topic_model.get_topic(3))
-
 # Daten Speichern
-#try:
-#    with open("Toots.txt", 'w', encoding='utf-8') as f:
-#        for i, toot in enumerate(data, 1):
-#            f.write(f"Toot #{i}\n")
-#            f.write(f"Author: {toot['author']}\n")
-#            f.write(f"Date: {toot['created_at']}\n")
-#            f.write(f"Content: {toot['content']}\n")
-#            f.write(f"URL: {toot['url']}\n")
-#            f.write("-" * 50 + "\n\n")
-#except Exception as e:
-#    print(f"Fehler beim Speichern: {e}")
-#    exit()
+try:
+    with open("Toots_roh.txt", 'w', encoding='utf-8') as f:
+        for i, toot in enumerate(data_roh, 1):
+            f.write(f"Toot #{i}\n")
+            #f.write(f"Author: {toot['author']}\n")
+            #f.write(f"Date: {toot['created_at']}\n")
+            f.write(f"Content: {toot['content']}\n")
+            #f.write(f"URL: {toot['url']}\n")
+            f.write("-" * 50 + "\n\n")
 
-#print("Daten erfolgreich extrahiert und gespeichert.")
+    with open("Toots_1.txt", 'w', encoding='utf-8') as f:
+        for i, toot in enumerate(data_1, 1):
+            f.write(f"Toot #{i}\n")
+            #f.write(f"Author: {toot['author']}\n")
+            #f.write(f"Date: {toot['created_at']}\n")
+            f.write(f"Content: {toot['content']}\n")
+            #f.write(f"URL: {toot['url']}\n")
+            f.write("-" * 50 + "\n\n")
+
+    with open("Toots_3.txt", 'w', encoding='utf-8') as f:
+        for i, toot in enumerate(data_2, 1):
+            f.write(f"Toot #{i}\n")
+            #f.write(f"Author: {toot['author']}\n")
+            #f.write(f"Date: {toot['created_at']}\n")
+            f.write(f"Content: {toot['content']}\n")
+            #f.write(f"URL: {toot['url']}\n")
+            f.write("-" * 50 + "\n\n")
+except Exception as e:
+    print(f"Fehler beim Speichern: {e}")
+    exit()
+
+print("Daten erfolgreich extrahiert und gespeichert.")
