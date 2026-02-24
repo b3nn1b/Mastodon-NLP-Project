@@ -1,9 +1,21 @@
-import json
+#import json
+from enum import auto
+
 import nltk
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
+from HanTa import HanoverTagger as ht
 from bertopic import BERTopic
-import plotly.graph_objects as go
+from sentence_transformers import SentenceTransformer
+#import plotly.graph_objects as go
+
+FILE = 'hamburg1.txt'
+
+#sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2
+#sentence-transformers/paraphrase-multilingual-mpnet-base-v2
+EMBEDDING = 'sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2'
+NR_TOPICS = "auto"
+MIN_TOPIC_SIZE = 4
 
 try:
     stopwords.words('german')
@@ -11,6 +23,7 @@ except LookupError:
     nltk.download('stopwords')
     nltk.download('punkt')
     nltk.download('punkt_tab')
+    nltk.download('wordnet')
 
 def load_list_from_file(filename):
     data_list = []
@@ -28,18 +41,78 @@ def remove_stopwords(text_liste, sprache='german'):
         filtered_list.append(" ".join(gefilterte_woerter))
     return filtered_list
 
-content = load_list_from_file('content.txt')
-filtered_content = remove_stopwords(content)
+def remove_stopwords_lemma(text_liste, sprache='german'):
+    # Initialize HanoverTagger
+    tagger = ht.HanoverTagger('morphmodel_ger.pgz')
 
-topic_model = BERTopic(language="german", nr_topics="auto")
-topics, probs = topic_model.fit_transform(filtered_content)
+    # Get stopwords
+    stoppwoerter = stopwords.words(sprache)
+    filtered_list = []
+
+    for text in text_liste:
+        woerter = word_tokenize(text)
+        gefilterte_woerter = []
+
+        for w in woerter:
+            # Check if word is not a stopword
+            if w.lower() not in stoppwoerter:
+                # Lemmatize the word using HanoverTagger
+                # tag_sent returns list of tuples (word, pos, lemma)
+                tagged = tagger.tag_sent([w.lower()])
+                if tagged:
+                    lemma = tagged[0][1]  # Third element is the lemma
+                    gefilterte_woerter.append(lemma)
+                else:
+                    # If lemmatization fails, use original word
+                    gefilterte_woerter.append(w.lower())
+
+        filtered_list.append(" ".join(gefilterte_woerter))
+
+    return filtered_list
+
+def get_topic_words(topic_model, topic_id, top_n=10):
+    """Topic Wörter pro Topic anzeigen"""
+    topic_words = topic_model.get_topic(topic_id)
+    return [word for word, score in topic_words[:top_n]]
+
+content = load_list_from_file(FILE)
+#filtered_content = remove_stopwords(content)
+lemma_content = remove_stopwords_lemma(content)
+
+#print(filtered_content)
+#print(lemma_content)
+
+#topic_model = BERTopic(language="german", nr_topics="auto")
+
+#embedding_model = SentenceTransformer('sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2')
+embedding_model = SentenceTransformer(EMBEDDING)
+topic_model = BERTopic(
+    language="german",
+    embedding_model=embedding_model,
+    nr_topics=NR_TOPICS,  # Try with a small number first
+    min_topic_size=MIN_TOPIC_SIZE,  # Minimum documents per topic
+    verbose=True
+)
+topics, probs = topic_model.fit_transform(lemma_content)
 
 #fig = topic_model.visualize_topics()
 #fig.write_html("topics.html")
+print(f"Topics found: {len(set(topics))}")
 
-#print(topic_model.get_topic_info())
-print(topic_model.get_topic(1))
-print(topic_model.get_topic(2))
-print(topic_model.get_topic(3))
-print(topic_model.get_topic(4))
-print(topic_model.get_topic(5))
+words = get_topic_words(topic_model, 0, top_n=10)
+print(words)
+words = get_topic_words(topic_model, 1, top_n=10)
+print(words)
+words = get_topic_words(topic_model, 2, top_n=10)
+print(words)
+words = get_topic_words(topic_model, 3, top_n=10)
+print(words)
+words = get_topic_words(topic_model, 4, top_n=10)
+print(words)
+
+#print(topic_model.get_topic(0))
+#print(topic_model.get_topic(1))
+#print(topic_model.get_topic(2))
+#print(topic_model.get_topic(3))
+#print(topic_model.get_topic(4))
+#print(topic_model.get_topic(5))

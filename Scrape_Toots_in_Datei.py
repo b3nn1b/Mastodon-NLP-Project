@@ -38,7 +38,7 @@ masto = mastodon.Mastodon(
 all_toots = []
 max_id = None
 limit = 40  # Max allowed per request
-total_to_fetch = 200  # Total number of toots you want to fetch
+total_to_fetch = 300  # Total number of toots you want to fetch
 
 try:
     # Fetch first batch
@@ -94,7 +94,7 @@ try:
     content_list = []
     for item in data:
         content_list.append(item['content'])
-    save_list_to_file(content_list, 'content.txt')
+    save_list_to_file(content_list, 'hamburg1.txt')
 
 except Exception as e:
     print(f"Fehler beim Verarbeiten: {e}")
