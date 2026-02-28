@@ -1,19 +1,22 @@
-#import json
-from enum import auto
-
 import nltk
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
 from HanTa import HanoverTagger as ht
 from bertopic import BERTopic
 from sentence_transformers import SentenceTransformer
-#import plotly.graph_objects as go
+from gensim.models import CoherenceModel
+from gensim.corpora import Dictionary
+import numpy as np
 
 FILE = 'hamburg1.txt'
 
-#sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2
-#sentence-transformers/paraphrase-multilingual-mpnet-base-v2
+COHERENCE_SCORE='c_v'
+#COHERENCE_SCORE='u_mass'
+#COHERENCE_SCORE='c_npmi'
+#COHERENCE_SCORE='c_uci'
+
 EMBEDDING = 'sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2'
+#EMBEDDING = 'sentence-transformers/paraphrase-multilingual-mpnet-base-v2'
 NR_TOPICS = "auto"
 MIN_TOPIC_SIZE = 4
 
@@ -82,9 +85,6 @@ lemma_content = remove_stopwords_lemma(content)
 #print(filtered_content)
 #print(lemma_content)
 
-#topic_model = BERTopic(language="german", nr_topics="auto")
-
-#embedding_model = SentenceTransformer('sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2')
 embedding_model = SentenceTransformer(EMBEDDING)
 topic_model = BERTopic(
     language="german",
@@ -95,24 +95,40 @@ topic_model = BERTopic(
 )
 topics, probs = topic_model.fit_transform(lemma_content)
 
-#fig = topic_model.visualize_topics()
-#fig.write_html("topics.html")
-print(f"Topics found: {len(set(topics))}")
+topic_words = topic_model.get_topic_info()
 
-words = get_topic_words(topic_model, 0, top_n=10)
-print(words)
-words = get_topic_words(topic_model, 1, top_n=10)
-print(words)
-words = get_topic_words(topic_model, 2, top_n=10)
-print(words)
-words = get_topic_words(topic_model, 3, top_n=10)
-print(words)
-words = get_topic_words(topic_model, 4, top_n=10)
-print(words)
+# Step 3: Prepare data for Gensim coherence calculation
+# Get the actual topic words (not topic info)
+topics_words = []
+for topic_id in range(len(topic_model.get_topic_info()) ):  # -1 to exclude -1 (outliers)
+    topic_info = topic_model.get_topic(topic_id)
+    words = [word for word, _ in topic_info]
+    topics_words.append(words)
+print(topics_words)
 
-#print(topic_model.get_topic(0))
-#print(topic_model.get_topic(1))
-#print(topic_model.get_topic(2))
-#print(topic_model.get_topic(3))
-#print(topic_model.get_topic(4))
-#print(topic_model.get_topic(5))
+content_list = [string.split() for string in lemma_content]
+tokenized_docs = [doc.lower().split() for doc in lemma_content]
+dictionary = Dictionary(content_list)
+
+coherence_model = CoherenceModel(
+    topics=topics_words,
+    texts=tokenized_docs,
+    dictionary=dictionary,
+    coherence=COHERENCE_SCORE
+)
+
+coherence_score = coherence_model.get_coherence()
+
+print(f"Topic Anzahl: {len(set(topics))}")
+print(f"Coherence Score: {coherence_score}")
+
+top_words = get_topic_words(topic_model, 0, top_n=10)
+print(top_words)
+top_words = get_topic_words(topic_model, 1, top_n=10)
+print(top_words)
+top_words = get_topic_words(topic_model, 2, top_n=10)
+print(top_words)
+top_words = get_topic_words(topic_model, 3, top_n=10)
+print(top_words)
+top_words = get_topic_words(topic_model, 4, top_n=10)
+print(top_words)
