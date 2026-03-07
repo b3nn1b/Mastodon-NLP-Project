@@ -5,20 +5,37 @@ import mastodon
 import time
 from credentials import MASTODON_INSTANCE
 from credentials import ACCESS_TOKEN
-from credentials import HASHTAG
+
+HASHTAG = "hamburg"
+TOOTS = 1000
+FILENAME = 'hamburg5.txt'
 
 # HTML und URLs entfernen
+#def remove_html(html_content):
+#    soup = BeautifulSoup(html_content, 'html.parser')
+#    url_pattern = re.compile(r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+')
+#    text_content = []
+#    for p in soup.find_all('p'):
+#        text = p.get_text()
+#        text = re.sub(r'\s+', ' ', text).strip()
+#        text = url_pattern.sub('', text)  # URLs entfernen
+#        if text:
+#            text_content.append(text)
+#    return ' '.join(text_content)
+
 def remove_html(html_content):
     soup = BeautifulSoup(html_content, 'html.parser')
+    # Entferne alle HTML-Tags
+    text = soup.get_text()
+    # Entferne URLs
     url_pattern = re.compile(r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+')
-    text_content = []
-    for p in soup.find_all('p'):
-        text = p.get_text()
-        text = re.sub(r'\s+', ' ', text).strip()
-        text = url_pattern.sub('', text)  # URLs entfernen
-        if text:
-            text_content.append(text)
-    return ' '.join(text_content)
+    text = url_pattern.sub('', text)
+    # Entferne mehrfache Leerzeichen und Zeilenumbrüche
+    text = re.sub(r'\s+', ' ', text).strip()
+    # Füge Leerzeichen nach Satzzeichen hinzu
+    text = re.sub(r'\.(?=\w)', '. ', text)
+    text = re.sub(r',(?=\w)', ', ', text)
+    return text
 
 # Toot Content als JSON speichern
 def save_list_to_json(data_list, filename):
@@ -39,7 +56,7 @@ masto = mastodon.Mastodon(
 all_toots = []
 max_id = None
 limit = 40  # Max allowed per request
-total_to_fetch = 600  # Total number of toots you want to fetch
+total_to_fetch = TOOTS  # Total number of toots you want to fetch
 toots_fetched = 0
 
 try:
@@ -103,7 +120,7 @@ try:
     content_list = []
     for item in data:
         content_list.append(item['content'])
-    save_list_to_file(content_list, 'hamburg3.txt')
+    save_list_to_file(content_list, FILENAME)
 
 except Exception as e:
     print(f"Fehler beim Verarbeiten: {e}")
