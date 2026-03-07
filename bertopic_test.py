@@ -8,7 +8,7 @@ from gensim.models import CoherenceModel
 from gensim.corpora import Dictionary
 import numpy as np
 
-FILE = 'hamburg1.txt'
+FILE = 'hamburg3.txt'
 
 COHERENCE_SCORE='c_v'
 #COHERENCE_SCORE='u_mass'
@@ -17,7 +17,7 @@ COHERENCE_SCORE='c_v'
 
 EMBEDDING = 'sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2'
 #EMBEDDING = 'sentence-transformers/paraphrase-multilingual-mpnet-base-v2'
-NR_TOPICS = "auto"
+NR_TOPICS = 6
 MIN_TOPIC_SIZE = 4
 
 try:
@@ -95,23 +95,26 @@ topic_model = BERTopic(
 )
 topics, probs = topic_model.fit_transform(lemma_content)
 
-topic_words = topic_model.get_topic_info()
+topic_anzahl = str(len(set(topics)))
+print(f"Topic Anzahl: {topic_anzahl}")
 
-# Step 3: Prepare data for Gensim coherence calculation
-# Get the actual topic words (not topic info)
-topics_words = []
-for topic_id in range(len(topic_model.get_topic_info()) ):  # -1 to exclude -1 (outliers)
-    topic_info = topic_model.get_topic(topic_id)
-    words = [word for word, _ in topic_info]
-    topics_words.append(words)
-print(topics_words)
+#topic_words = topic_model.get_topic_info()
+
+all_topics = []
+for topic_id in range(len(topic_model.get_topic_info())-1):  # -1 für Outliers
+    topic_words = get_topic_words(topic_model, topic_id, top_n=5)
+    print(topic_id)
+    print(topic_words)
+    all_topics.append(topic_words)
+
+print(all_topics)
 
 content_list = [string.split() for string in lemma_content]
 tokenized_docs = [doc.lower().split() for doc in lemma_content]
 dictionary = Dictionary(content_list)
 
 coherence_model = CoherenceModel(
-    topics=topics_words,
+    topics=all_topics,
     texts=tokenized_docs,
     dictionary=dictionary,
     coherence=COHERENCE_SCORE
@@ -119,16 +122,15 @@ coherence_model = CoherenceModel(
 
 coherence_score = coherence_model.get_coherence()
 
-print(f"Topic Anzahl: {len(set(topics))}")
 print(f"Coherence Score: {coherence_score}")
 
-top_words = get_topic_words(topic_model, 0, top_n=10)
-print(top_words)
-top_words = get_topic_words(topic_model, 1, top_n=10)
-print(top_words)
-top_words = get_topic_words(topic_model, 2, top_n=10)
-print(top_words)
-top_words = get_topic_words(topic_model, 3, top_n=10)
-print(top_words)
-top_words = get_topic_words(topic_model, 4, top_n=10)
-print(top_words)
+#top_words = get_topic_words(topic_model, 0, top_n=10)
+#print(top_words)
+#top_words = get_topic_words(topic_model, 1, top_n=10)
+#print(top_words)
+#top_words = get_topic_words(topic_model, 2, top_n=10)
+#print(top_words)
+#top_words = get_topic_words(topic_model, 3, top_n=10)
+#print(top_words)
+#top_words = get_topic_words(topic_model, 4, top_n=10)
+#print(top_words)

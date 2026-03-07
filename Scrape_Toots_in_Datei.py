@@ -2,6 +2,7 @@ from bs4 import BeautifulSoup
 import re
 import json
 import mastodon
+import time
 from credentials import MASTODON_INSTANCE
 from credentials import ACCESS_TOKEN
 from credentials import HASHTAG
@@ -38,7 +39,8 @@ masto = mastodon.Mastodon(
 all_toots = []
 max_id = None
 limit = 40  # Max allowed per request
-total_to_fetch = 300  # Total number of toots you want to fetch
+total_to_fetch = 600  # Total number of toots you want to fetch
+toots_fetched = 0
 
 try:
     # Fetch first batch
@@ -52,11 +54,17 @@ try:
         exit()
 
     all_toots.extend(toots)
+    toots_fetched += len(toots)
     max_id = toots[-1]['id']
     print("Erster Durchgang fertig")
 
     # Fetch additional batches
     while len(all_toots) < total_to_fetch:
+        if toots_fetched >= 280:
+            print("Rate Limit erreicht. Warte 5 Minuten...")
+            time.sleep(300)  # 5 Minuten warten
+            toots_fetched = 0  # Reset counter after waiting
+
         more_toots = masto.timeline_hashtag(
             hashtag=HASHTAG,
             limit=limit,
@@ -67,6 +75,7 @@ try:
             break
 
         all_toots.extend(more_toots)
+        toots_fetched += len(more_toots)
         max_id = more_toots[-1]['id']
         print("Weiterer Durchgang")
 
@@ -94,7 +103,7 @@ try:
     content_list = []
     for item in data:
         content_list.append(item['content'])
-    save_list_to_file(content_list, 'hamburg1.txt')
+    save_list_to_file(content_list, 'hamburg3.txt')
 
 except Exception as e:
     print(f"Fehler beim Verarbeiten: {e}")
