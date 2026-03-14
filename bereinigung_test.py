@@ -21,20 +21,6 @@ def clean_text(text):
     return text
 
 
-# Verarbeite hamburg4.txt
-with open('hamburg4.txt', 'r', encoding='utf-8') as file:
-    content = file.read()
-
-# Teile den Inhalt in Abschnitte auf
-sections = content.split('\n\n')
-
-# Bereinige jeden Abschnitt
-cleaned_sections = [clean_text(section) for section in sections]
-
-# Schreibe die bereinigten Abschnitte in eine neue Datei
-with open('hamburg4_cleaned.txt', 'w', encoding='utf-8') as file:
-    file.write('\n\n'.join(cleaned_sections))
-
 # Verarbeite hamburg5.txt
 with open('hamburg5.txt', 'r', encoding='utf-8') as file:
     content = file.read()

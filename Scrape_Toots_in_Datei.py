@@ -1,66 +1,51 @@
 from bs4 import BeautifulSoup
 import re
-import json
 import mastodon
 import time
 from credentials import MASTODON_INSTANCE
 from credentials import ACCESS_TOKEN
 
 HASHTAG = "hamburg"
-TOOTS = 1000
-FILENAME = 'hamburg5.txt'
+TOOTS = 1000        # Anzahl der zu ladenden Toots
+FILENAME = 'hamburg2.txt'
 
-# HTML und URLs entfernen
-#def remove_html(html_content):
-#    soup = BeautifulSoup(html_content, 'html.parser')
-#    url_pattern = re.compile(r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+')
-#    text_content = []
-#    for p in soup.find_all('p'):
-#        text = p.get_text()
-#        text = re.sub(r'\s+', ' ', text).strip()
-#        text = url_pattern.sub('', text)  # URLs entfernen
-#        if text:
-#            text_content.append(text)
-#    return ' '.join(text_content)
-
+# HTML Code und URLs entfernen
 def remove_html(html_content):
     soup = BeautifulSoup(html_content, 'html.parser')
     # Entferne alle HTML-Tags
+    #text = soup.get_text(separator=' ', strip=True)
     text = soup.get_text()
     # Entferne URLs
     url_pattern = re.compile(r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+')
     text = url_pattern.sub('', text)
     # Entferne mehrfache Leerzeichen und Zeilenumbrüche
     text = re.sub(r'\s+', ' ', text).strip()
+    # Füge Leerzeichen zwischen Klein- und Großbuchstaben ein (z. B. „Wort1Wort2“)
+    text = re.sub(r'([a-z])([A-Z])', r'\1 \2', text)
     # Füge Leerzeichen nach Satzzeichen hinzu
     text = re.sub(r'\.(?=\w)', '. ', text)
     text = re.sub(r',(?=\w)', ', ', text)
     return text
-
-# Toot Content als JSON speichern
-def save_list_to_json(data_list, filename):
-    with open(filename, 'w', encoding='utf-8') as f:
-        json.dump(data_list, f, ensure_ascii=False)
 
 def save_list_to_file(data_list, filename):
     with open(filename, 'w', encoding='utf-8') as f:
         for item in data_list:
             f.write(item + '\n')
 
-# Initialisieren
+# Mastodon initialisieren
 masto = mastodon.Mastodon(
     access_token = ACCESS_TOKEN,
     api_base_url = MASTODON_INSTANCE
 )
-# Variablen für Pagination
+
+# Toots laden
 all_toots = []
 max_id = None
-limit = 40  # Max allowed per request
-total_to_fetch = TOOTS  # Total number of toots you want to fetch
+limit = 40  # Limit pro Abfrage
+total_to_fetch = TOOTS  # Anzahl der Toots
 toots_fetched = 0
 
 try:
-    # Fetch first batch
     toots = masto.timeline_hashtag(
         hashtag=HASHTAG,
         limit=limit
@@ -73,14 +58,15 @@ try:
     all_toots.extend(toots)
     toots_fetched += len(toots)
     max_id = toots[-1]['id']
-    print("Erster Durchgang fertig")
+    rounds = 1
+    print("Durchgang 1 fertig")
 
-    # Fetch additional batches
+    # Weitere Durchgänge
     while len(all_toots) < total_to_fetch:
-        if toots_fetched >= 280:
+        if toots_fetched >= 280:    # Rate Limit beträgt 300 pro 5 Minuten
             print("Rate Limit erreicht. Warte 5 Minuten...")
-            time.sleep(300)  # 5 Minuten warten
-            toots_fetched = 0  # Reset counter after waiting
+            time.sleep(300)
+            toots_fetched = 0
 
         more_toots = masto.timeline_hashtag(
             hashtag=HASHTAG,
@@ -94,18 +80,19 @@ try:
         all_toots.extend(more_toots)
         toots_fetched += len(more_toots)
         max_id = more_toots[-1]['id']
-        print("Weiterer Durchgang")
+        rounds += 1
+        print(f"Durchgang {rounds} fertig")
 
         # Stop if we have enough toots
         if len(all_toots) >= total_to_fetch:
             all_toots = all_toots[:total_to_fetch]
-            print("Alle Durchgänge erledigt")
+            print(f"{len(all_toots)} Toots in {rounds} Durchgängen geladen")
             break
 except Exception as e:
     print(f"Fehler beim Abrufen: {e}")
     exit()
 
-# Daten verarbeiten
+# Daten verarbeiten und in Datei schreiben
 try:
     data = []
     for toot in all_toots:
@@ -121,6 +108,7 @@ try:
     for item in data:
         content_list.append(item['content'])
     save_list_to_file(content_list, FILENAME)
+    print(f"Toots in {FILENAME} geschrieben")
 
 except Exception as e:
     print(f"Fehler beim Verarbeiten: {e}")
