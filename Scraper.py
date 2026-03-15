@@ -7,36 +7,42 @@ from credentials import ACCESS_TOKEN
 
 HASHTAG = "hamburg"
 TOOTS = 1000        # Anzahl der zu ladenden Toots
-FILENAME = 'hamburg2.txt'
+FILENAME = 'hamburg.txt'
 
 # HTML Code und URLs entfernen
 def remove_html(html_content):
     soup = BeautifulSoup(html_content, 'html.parser')
-    # Entferne alle HTML-Tags
+    # HTML
     #text = soup.get_text(separator=' ', strip=True)
     text = soup.get_text()
-    # Entferne URLs
+    # URLs
     url_pattern = re.compile(r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+')
     text = url_pattern.sub('', text)
-    # Entferne mehrfache Leerzeichen und Zeilenumbrüche
+    # Leerzeichen und Zeilenumbrüche
     text = re.sub(r'\s+', ' ', text).strip()
-    # Füge Leerzeichen zwischen Klein- und Großbuchstaben ein (z. B. „Wort1Wort2“)
+    # Leerzeichen zwischen Klein- und Großbuchstaben einfügen
     text = re.sub(r'([a-z])([A-Z])', r'\1 \2', text)
-    # Füge Leerzeichen nach Satzzeichen hinzu
+    # Leerzeichen nach Satzzeichen einfügen
     text = re.sub(r'\.(?=\w)', '. ', text)
     text = re.sub(r',(?=\w)', ', ', text)
     return text
 
+# Toots in Datei schreiben
 def save_list_to_file(data_list, filename):
     with open(filename, 'w', encoding='utf-8') as f:
         for item in data_list:
             f.write(item + '\n')
 
 # Mastodon initialisieren
-masto = mastodon.Mastodon(
-    access_token = ACCESS_TOKEN,
-    api_base_url = MASTODON_INSTANCE
-)
+try:
+    masto = mastodon.Mastodon(
+        access_token = ACCESS_TOKEN,
+        api_base_url = MASTODON_INSTANCE
+    )
+
+except Exception as e:
+    print(f"Fehler bei der Mastodon Verbindung: {e}")
+    exit()
 
 # Toots laden
 all_toots = []
@@ -46,6 +52,7 @@ total_to_fetch = TOOTS  # Anzahl der Toots
 toots_fetched = 0
 
 try:
+    print("Mastodon Toots laden...")
     toots = masto.timeline_hashtag(
         hashtag=HASHTAG,
         limit=limit
@@ -83,13 +90,12 @@ try:
         rounds += 1
         print(f"Durchgang {rounds} fertig")
 
-        # Stop if we have enough toots
         if len(all_toots) >= total_to_fetch:
             all_toots = all_toots[:total_to_fetch]
             print(f"{len(all_toots)} Toots in {rounds} Durchgängen geladen")
             break
 except Exception as e:
-    print(f"Fehler beim Abrufen: {e}")
+    print(f"Fehler in Mastodon Abfrage: {e}")
     exit()
 
 # Daten verarbeiten und in Datei schreiben
@@ -97,11 +103,11 @@ try:
     data = []
     for toot in all_toots:
         data.append({
-            'id': toot['id'],
+            #'id': toot['id'],
             'content': remove_html(toot['content']),
-            'created_at': toot['created_at'],
-            'author': toot['account']['acct'],
-            'url': toot['url']
+            #'created_at': toot['created_at'],
+            #'author': toot['account']['acct'],
+            #'url': toot['url']
         })
 
     content_list = []
@@ -111,7 +117,7 @@ try:
     print(f"Toots in {FILENAME} geschrieben")
 
 except Exception as e:
-    print(f"Fehler beim Verarbeiten: {e}")
+    print(f"Fehler beim Speichern: {e}")
     exit()
 
 

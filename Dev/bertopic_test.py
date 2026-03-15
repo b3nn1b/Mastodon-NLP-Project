@@ -30,9 +30,9 @@ except LookupError:
 
 def load_list_from_file(filename):
     data_list = []
-    with open(filename, 'r', encoding='utf-8') as f:  # 'r' für Lesen, encoding für Sonderzeichen
+    with open(filename, 'r', encoding='utf-8') as f:
         for line in f:
-            data_list.append(line.rstrip('\n'))  # Entfernt *nur* den Zeilenumbruch am Ende
+            data_list.append(line.rstrip('\n'))
     return data_list
 
 def remove_stopwords(text_liste, sprache='german'):
@@ -45,10 +45,8 @@ def remove_stopwords(text_liste, sprache='german'):
     return filtered_list
 
 def remove_stopwords_lemma(text_liste, sprache='german'):
-    # Initialize HanoverTagger
     tagger = ht.HanoverTagger('morphmodel_ger.pgz')
 
-    # Get stopwords
     stoppwoerter = stopwords.words(sprache)
     filtered_list = []
 
@@ -57,16 +55,12 @@ def remove_stopwords_lemma(text_liste, sprache='german'):
         gefilterte_woerter = []
 
         for w in woerter:
-            # Check if word is not a stopword
             if w.lower() not in stoppwoerter:
-                # Lemmatize the word using HanoverTagger
-                # tag_sent returns list of tuples (word, pos, lemma)
                 tagged = tagger.tag_sent([w.lower()])
                 if tagged:
-                    lemma = tagged[0][1]  # Third element is the lemma
+                    lemma = tagged[0][1]
                     gefilterte_woerter.append(lemma)
                 else:
-                    # If lemmatization fails, use original word
                     gefilterte_woerter.append(w.lower())
 
         filtered_list.append(" ".join(gefilterte_woerter))
@@ -74,7 +68,6 @@ def remove_stopwords_lemma(text_liste, sprache='german'):
     return filtered_list
 
 def get_topic_words(topic_model, topic_id, top_n=10):
-    """Topic Wörter pro Topic anzeigen"""
     topic_words = topic_model.get_topic(topic_id)
     return [word for word, score in topic_words[:top_n]]
 
@@ -89,8 +82,8 @@ embedding_model = SentenceTransformer(EMBEDDING)
 topic_model = BERTopic(
     language="german",
     embedding_model=embedding_model,
-    nr_topics=NR_TOPICS,  # Try with a small number first
-    min_topic_size=MIN_TOPIC_SIZE,  # Minimum documents per topic
+    nr_topics=NR_TOPICS,
+    min_topic_size=MIN_TOPIC_SIZE,
     verbose=True
 )
 topics, probs = topic_model.fit_transform(lemma_content)
@@ -101,7 +94,7 @@ print(f"Topic Anzahl: {topic_anzahl}")
 #topic_words = topic_model.get_topic_info()
 
 all_topics = []
-for topic_id in range(len(topic_model.get_topic_info())-1):  # -1 für Outliers
+for topic_id in range(len(topic_model.get_topic_info())-1):
     topic_words = get_topic_words(topic_model, topic_id, top_n=5)
     print(topic_id)
     print(topic_words)
