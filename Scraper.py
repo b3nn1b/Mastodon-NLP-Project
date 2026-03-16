@@ -5,15 +5,14 @@ import time
 from credentials import MASTODON_INSTANCE
 from credentials import ACCESS_TOKEN
 
-HASHTAG = "hamburg"
+HASHTAG = "hamburg" # Ohne #
 TOOTS = 1000        # Anzahl der zu ladenden Toots
-FILENAME = 'hamburg.txt'
+FILENAME = 'hamburg.txt' # Datei für extrahierte Toots
 
 # HTML Code und URLs entfernen
 def remove_html(html_content):
     soup = BeautifulSoup(html_content, 'html.parser')
     # HTML
-    #text = soup.get_text(separator=' ', strip=True)
     text = soup.get_text()
     # URLs
     url_pattern = re.compile(r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+')

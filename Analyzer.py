@@ -7,8 +7,8 @@ from sklearn.feature_extraction.text import CountVectorizer
 import gensim.corpora as corpora
 from gensim.models import CoherenceModel
 
-FILE = 'hamburg2.txt'
-HASHTAG = "hamburg"
+FILE = 'hamburg.txt' # Mit Scraper extrahierte Toots
+HASHTAG = "hamburg" # Ohne #
 
 # BERTopic Parameter
 EMBEDDING = 'sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2'

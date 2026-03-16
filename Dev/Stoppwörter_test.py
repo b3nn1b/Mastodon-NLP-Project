@@ -11,9 +11,9 @@ except LookupError:
 
 def load_list_from_file(filename):
     data_list = []
-    with open(filename, 'r', encoding='utf-8') as f:  # 'r' für Lesen, encoding für Sonderzeichen
+    with open(filename, 'r', encoding='utf-8') as f:
         for line in f:
-            data_list.append(line.rstrip('\n'))  # Entfernt *nur* den Zeilenumbruch am Ende
+            data_list.append(line.rstrip('\n'))
     return data_list
 
 def remove_stopwords(text_liste, sprache='german'):
@@ -25,7 +25,7 @@ def remove_stopwords(text_liste, sprache='german'):
         filtered_list.append(" ".join(gefilterte_woerter))
     return filtered_list
 
-content = load_list_from_file('content.txt')
+content = load_list_from_file('../content.txt')
 filtered_content = remove_stopwords(content)
 print(filtered_content)
 

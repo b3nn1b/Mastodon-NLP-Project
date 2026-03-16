@@ -13,9 +13,8 @@ from sklearn.feature_extraction.text import CountVectorizer
 import gensim.corpora as corpora
 from gensim.models import CoherenceModel
 
-HASHTAG = "hamburg"
+HASHTAG = "hamburg" # Ohne #
 TOOTS = 1000        # Anzahl der zu ladenden Toots
-FILENAME = 'hamburg.txt'
 
 # BERTopic Parameter
 EMBEDDING = 'sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2'
@@ -30,7 +29,6 @@ MIN_DIST = 0.05         # Entfernung zwischen Punkten
 def remove_html(html_content):
     soup = BeautifulSoup(html_content, 'html.parser')
     # HTML
-    #text = soup.get_text(separator=' ', strip=True)
     text = soup.get_text()
     # URLs
     url_pattern = re.compile(r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+')
