@@ -6,6 +6,7 @@ from nltk.corpus import stopwords
 from sklearn.feature_extraction.text import CountVectorizer
 import gensim.corpora as corpora
 from gensim.models import CoherenceModel
+import os
 
 FILE = 'hamburg.txt' # Mit Scraper extrahierte Toots
 HASHTAG = "hamburg" # Ohne #
@@ -15,9 +16,12 @@ EMBEDDING = 'sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2'
 #EMBEDDING = 'sentence-transformers/paraphrase-multilingual-mpnet-base-v2'
 #EMBEDDING = 'all-MiniLM-L6-v2'
 NR_TOPICS = None        # Topic Anzahl nicht vorgeben
-MIN_TOPIC_SIZE = 20     # Topic Mindestgröße
-N_NEIGHBORS = 50        # Anzahl Nachbarn
+MIN_TOPIC_SIZE = 10     # Topic Mindestgröße
+N_NEIGHBORS = 60        # Anzahl Nachbarn
 MIN_DIST = 0.05         # Entfernung zwischen Punkten
+
+# Tokenizers Warnung abschalten
+os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
 # Stopwörterliste erstellen
 try:

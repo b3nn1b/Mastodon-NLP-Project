@@ -27,7 +27,7 @@ Folgende externe Pakete werden verwendet:
 *   `sentence-transformers` (Bert-Baselines für Embeddings)
 *   `nltk` (Textverarbeitung/Stopwords)
 *   `scikit-learn` (Vektorisierung)
-*   `gensim` (Coherence Berechnung)
+*   `gensim` (Coherence Score Berechnung)
 
 ## Ausführung
 
@@ -36,21 +36,23 @@ python main.py
 ```
 
 Alternativ können die Toots mit Scraper.py abgerufen und in einer Datei gespeichert werden.  
-Anschließend kann die Topic Analyse mit Analyzer.py durchgeführt werden.  
+Anschließend kann die Topic Analyse mit Analyzer.py durchgeführt werden.
+Scraper und Analyzer stehen auch als Jupyter Notebook zur Verfügung.
 
 ## Konfigurationsparameter
 
-| Parameter        | Beschreibung                                    | Standardwert |
-|------------------|-------------------------------------------------|--------------|
-| `HASHTAG`        | Der zu analysierende Hashtag                    | `"hamburg"`  |
-| `TOOTS`          | Anzahl der zu ladenden Toots                    | `1000`       |
+| Parameter        | Beschreibung                                    | Standardwert                                                  |
+|------------------|-------------------------------------------------|---------------------------------------------------------------|
+| `HASHTAG`        | Der zu analysierende Hashtag                    | `"hamburg"`                                                   |
+| `TOOTS`          | Anzahl der zu ladenden Toots                    | `1000`                                                        |
 | `EMBEDDING`      | Embedding-Modell für BERTopic                   | `sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2` |
-| `NR_TOPICS`      | Vorgabe der Anzahl der Topics                   | `None`       |
-| `MIN_TOPIC_SIZE` | Mindestgröße pro Topic                          | `20`         |
-| `N_NEIGHBORS`    | Anzahl der betrachteten "Nachbarn" im Embedding | `50`         |
-| `MIN_DIST`       | Mindestabstand zwischen Punkten im Embedding    | `0.05`       |
+| `NR_TOPICS`      | Vorgabe der Anzahl der Topics                   | `None`                                                        |
+| `MIN_TOPIC_SIZE` | Mindestgröße pro Topic                          | `10`                                                          |
+| `N_NEIGHBORS`    | Anzahl der betrachteten "Nachbarn" im Embedding | `60`                                                          |
+| `MIN_DIST`       | Mindestabstand zwischen Punkten im Embedding    | `0.05`                                                        |
 
 ## Ausgabe
 
 Nach erfolgreicher Ausführung werden die wichtigsten fünf Topics sowie der Coherence Score im Terminal ausgegeben.  
 Die gesamte Liste aller erfassten Topics wird in topic_results.txt gespeichert.
+Bei Nutzung des Jupyter Notebooks wird keine Ausgabedatei erzeugt.
